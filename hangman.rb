@@ -1,39 +1,41 @@
-class Hangman
+require 'yaml'
 
-  def initialize
-    @words = []
-    @used_words = []
-    words = File.readlines("5desk.txt")
-    words.each { |w| @words << w.strip if w.strip.length > 4 && w.strip.length < 13 }
+class Hangman
+  
+  def initialize(words)
+    @words = words
     start
   end
 
+  private
   def play
     @hidden_word = @words.sample.upcase.split('')
     @used_words = []
-    puts "#{@hidden_word}"
+
     @show_word =  ("_" * @hidden_word.length).split('')
-    puts "#{@show_word}"
-    8.times do |n| #check the number of chances for different size words
+    puts "#{@show_word.join(' ')}"
+    @turn = 8
+    while @turn > 0  
       t = read_turn
       save_game if t == "#"
+      @turn -= 1
       if @hidden_word.include? t
         @hidden_word.each_with_index { |x, i| @show_word[i] = x if @hidden_word[i] == t}
         if won?
-          puts "* * * * * *  You Won!  * * * * * *"
-          puts "The secret word was: #{@show_word.join}"
+          puts "---> #{@show_word.join} <---"
+          puts "\n* * * * * *  You Won!  * * * * * *"
           break
         end  
       end
-      puts "#{@show_word.join(" ")}     Turns left: #{7 - n}     Words used: #{@used_words.join(" ")}"
+      puts "#{@show_word.join(" ")}     Turns left: #{@turn}     Words used: #{@used_words.join(" ")}"
     end
  
-    puts "You lost!  The secret word was: #{@show_word.join}" if !won? 
+    puts "\nYou lost!  The secret word was: #{@hidden_word.join}\n" if !won? 
     play_again? ? start : exit
   end
   
   def play_again?
-    print "Do you want to play again (y/n)?: "
+    print "\nDo you want to play again (y/n)?: "
     gets.chomp.upcase == "Y"? true : false
   end
   
@@ -42,20 +44,19 @@ class Hangman
   end
   
   def read_turn
-    # reads a letter and if it is the # character, saves the game
-    # also check if letter is already written
-    # keep track of letters already used
     while true
-      print "Guess a letter: "
+      print "\n(To save the game enter '#' )    Guess a letter: "
       @guess = gets.chomp.upcase
-      if "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".include? @guess
+      if @guess.length != 1
+        puts "\nType only one character and press enter..."
+      elsif "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".include? @guess 
         if @show_word.include? @guess
-          puts "Word already used, please try another one."
+          puts "\nWord already used, please try another one."
         else
           break
         end
       else
-        puts "Invalid entry, please try again...!"
+        puts "\nInvalid entry, please try again...!"
       end
     end  
     @used_words << @guess if @guess != "#"
@@ -64,7 +65,7 @@ class Hangman
   end
 
   def start
-    puts "... Play Hangman ..."
+    puts "\n... Play Hangman ..."
     puts "  1. New Game"
     puts "  2. Load Game"
     puts "  3. Exit"
@@ -79,13 +80,43 @@ class Hangman
       exit
     end
   end
+  
   def save_game
-    # saves current game
+    y = YAML::dump [@hidden_word, @used_words, @show_word, @turn]
+    fn = "saved/save-#{rand(10000)}.yaml"
+    File.open(fn, "w") do |f|
+      f.puts y
+    end
+    puts "\nSaving the file with the name #{fn}....\n\n"
+    start
   end
+  
   def load_game
-    # reads all the games from a directory
-    # and allows the user to load a game
+    files = Dir.entries('saved')
+    if files.size == 2
+      puts "\nThere are no saved games.\n"
+      start
+    else
+      files.each do |s|
+        puts "-> #{s}" if s[0..3] == "save"
+      end
+      print "Write the name of the file to be loaded: "
+      @save_fname = "saved/#{gets.chomp}"
+      begin
+        content = File.read(@save_fname)
+        y = YAML::load(content)
+        File.delete(@save_fname)
+        @hidden_word, @used_words, @show_word, @turn = y
+        @turn += 1
+        puts "#{@show_word.join(" ")}     Words used: #{@used_words.join(" ")}"
+      rescue
+        return
+      end
+    end
   end
 end
-
-Hangman.new
+words = []
+all_words = File.readlines("5desk.txt")
+all_words.each { |w| words << w.strip if w.strip.length > 4 && w.strip.length < 13 }
+    
+Hangman.new(words)
