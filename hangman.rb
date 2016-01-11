@@ -18,7 +18,7 @@ class Hangman
     while @turn > 0  
       t = read_turn
       save_game if t == "#"
-      @turn -= 1
+
       if @hidden_word.include? t
         @hidden_word.each_with_index { |x, i| @show_word[i] = x if @hidden_word[i] == t}
         if won?
@@ -26,6 +26,8 @@ class Hangman
           puts "\n* * * * * *  You Won!  * * * * * *"
           break
         end  
+      else
+        @turn -= 1
       end
       puts "#{@show_word.join(" ")}     Turns left: #{@turn}     Words used: #{@used_words.join(" ")}"
     end
