@@ -5,10 +5,14 @@ describe ConnectFour do
     @c = ConnectFour.new
   end
 
-  describe "#column_full?" do
-    it "returns true when the given column is full" do
-      6.times {|n| @c.grid[n][1] = n.even? ? "A": "B"} # fills the column 1 with As and Bs
-      expect(@c.column_full?(1)).to eq(true)      
+  describe "#column_row" do
+    it "returns the current row in the column" do
+      4.times {|n| @c.grid[5-n][1] = n.even? ? "A": "B"} # fills the column 1 with As and Bs
+      expect(@c.column_row(1)).to eq(2)      
+    end
+    it "returns -1 when the column is full" do
+      6.times {|n| @c.grid[5-n][1] = n.even? ? "A": "B"} 
+      expect(@c.column_row(1)).to eq(-1)      
     end
   end
 
@@ -73,21 +77,28 @@ describe ConnectFour do
     
     describe "#check_down_right" do
       before :each do
-        4.times {|n| @c.grid[n][n] = "A"}
-        @c.grid[4][4] = "B"
-        @c.grid[5][5] = "B"
-        @c.grid[5][6] = "A"
+        6.times {|n| @c.grid[n][0] = n.even? ? "A": "B"}
+        6.times {|n| @c.grid[n][1] = n.even? ? "B": "A"}
+        6.times {|n| @c.grid[n][3] = n.even? ? "B": "A"}
+        @c.grid[5][2] = "A"
       end
       context "finds 4 consecutive letters" do
         it "returns true for row 0, column 0, player A" do
+          @c.grid[2][2] = "A"
           expect(@c.check_down_right(0, 0, 'A')).to eq(true)
+        end
+        it "returns true for row 4, column 2, player A" do
+          @c.grid[4][2] = "A"
+          expect(@c.check_down_right(4, 2, 'A')).to eq(true)
         end
       end
       context "does not find 4 consecutive letters" do
         it "returns false for row 0, column 0, player B" do
+          @c.grid[0][0] = "B"
           expect(@c.check_down_right(0, 0, 'B')).to eq(false)
         end
         it "returns false for row 5, column 6, player A" do
+          @c.grid[5][6] = "A"
           expect(@c.check_down_right(5, 6, 'A')).to eq(false)
         end
       end
@@ -124,6 +135,37 @@ describe ConnectFour do
     it "returns true when grid is full" do
       6.times {|n| @c.grid[n] = ["A","B","A","B","A","B"]}
       expect(@c.tie).to eq(true)
+    end
+  end
+  
+  describe "#player_move" do
+    it "returns false when the value entered is invalid" do
+      allow(@c).to receive(:gets).and_return('9\n','15\n')
+      expect(@c.player_move('A')).to eq(-1)
+      expect(@c.player_move('B')).to eq(-1)
+    end
+    it "returns true when the user's input is between 0 and 6" do
+      allow(@c).to receive(:gets).and_return('4\n')
+      expect(@c.player_move('A')).to eq(4)
+    end
+    it "returns true when the grid has been updated successfully" do
+      allow(@c).to receive(:gets).and_return('4\n')
+      expect(@c.player_move('A')).to eq(4)
+    end
+  end
+  
+  describe "#play" do
+    it "returns Player A won! when there are 4 consecutive As in the grid" do
+      @c.grid[5] = ["B", "A", "A", "A", "A", "B", "B"]
+      expect(@c.play).to eq("Player A won!")
+    end
+    it "returns Player B won! when there are 4 consecutive Bs in the grid" do
+      @c.grid[5] = ["A", "A", "B", "B", "B", "B", "A"]
+      expect(@c.play).to eq("Player B won!")
+    end
+    it "returns It's a tie! when nobody won" do
+      allow(@c).to receive(:tie).and_return(true)         
+      expect(@c.play).to eq("It's a tie!")
     end
   end
 end
