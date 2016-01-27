@@ -92,6 +92,8 @@ class ConnectFour
     new_column = column - min
     #new_column = (column + row) > 6 ? 6 : column+row
     #new_row = (row + column) - new_column
+    new_column = (column + row) > 6 ? 6 : column+row
+    new_row = (row + column) - new_column
     6.times { |r| str += @grid[new_row+r][new_column-r] if (new_column-r) >= 0 && (new_row+r) <= 5}
     str.scan(/#{player}{4}/).size == 1 ? true : false
   end
