@@ -77,15 +77,21 @@ class ConnectFour
   end
   def check_down_right(row, column, player)
     str = ""  
-    new_row = (row - column) < 0 ? 0 : row-column
-    new_column = (column - row) < 0 ? 0 : column-row
+    min = (row < column) ? row : column
+    new_row = row - min
+    new_column = column - min
+    #new_row = (row - column) < 0 ? 0 : row-column
+    #new_column = (column - row) < 0 ? 0 : column-row
     6.times { |r| str += @grid[r+new_row][r+new_column] if (r+new_column) <= 6 && (r+new_row) <= 5}
     str.scan(/#{player}{4}/).size == 1 ? true : false
   end
   def check_down_left(row, column, player)
     str = ""
-    new_column = (column + row) > 6 ? 6 : column+row
-    new_row = (row + column) - new_column
+    min = (row < (6 - column)) ? row : (6-column)
+    new_row = row - min
+    new_column = column - min
+    #new_column = (column + row) > 6 ? 6 : column+row
+    #new_row = (row + column) - new_column
     6.times { |r| str += @grid[new_row+r][new_column-r] if (new_column-r) >= 0 && (new_row+r) <= 5}
     str.scan(/#{player}{4}/).size == 1 ? true : false
   end
